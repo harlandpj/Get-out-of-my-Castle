@@ -35,3 +35,12 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+
+# Put All Third Party Asset Folders Here (these are downloadeded automatically from Unity Asset Store
+/Assets/External Assets/AurynSky/*
+/Assets/External Assets/Cartoon Heroes/*
+/Assets/External Assets/Castle 1 LITE/*
+/Assets/External Assets/Casual RPG Monster - 26 Wolf/*
+/Assets/External Assets/Earthborn Troll/*
+/Assets/External Assets/Monster_Orc (Troll)/*
+/Assets/External Assets/*
