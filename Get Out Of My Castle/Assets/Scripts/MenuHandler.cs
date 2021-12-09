@@ -11,7 +11,7 @@ using UnityEditor;
 
 public class MenuHandler : MonoBehaviour
 {
-    AudioSource audio;
+    AudioSource theAudio;
     public AudioClip chime;
 
     [SerializeField]
@@ -19,8 +19,19 @@ public class MenuHandler : MonoBehaviour
 
     private void Awake()
     {
-        audio = GetComponent<AudioSource>();
+        theAudio = GetComponent<AudioSource>();
         DisableHeroBackgrounds();
+        HighlightPreviousHero(); // check and highlight previously selected hero from earlier session
+    }
+
+    private void HighlightPreviousHero()
+    {
+        // check if we have run the game before and highlight any previously used
+        if (MainManager.HeroSelected.Length > 0)
+        {
+            SelectHeroBackground();
+            MainManager.Instance.LoadUserData();
+        }
     }
 
     private void DisableHeroBackgrounds()
@@ -31,6 +42,7 @@ public class MenuHandler : MonoBehaviour
         }
     }
 
+    // ABSTRACTION
     public void HeroButtonAClicked()
     {
         MainManager.HeroSelected = "A";
@@ -42,17 +54,24 @@ public class MenuHandler : MonoBehaviour
     {
         // disable all hero backgrounds, then set current one active
         DisableHeroBackgrounds();
+        HighlightSelectedHero();
+        MainManager.Instance.SaveUserData();
+    }
+
+    private void HighlightSelectedHero()
+    {
         string heroToFind = "HeroBackground" + MainManager.HeroSelected;
 
         // the background must be a child under the canvas NOT in any other container
-        transform.FindChild(heroToFind).gameObject.SetActive(true);
+        transform.Find(heroToFind).gameObject.SetActive(true);
     }
 
     private void PlayButtonNoise()
     {
-        audio.PlayOneShot(chime, 1f);
+        theAudio.PlayOneShot(chime, 1f);
     }
 
+    // ABSTRACTION
     public void HeroButtonBClicked()
     {
         MainManager.HeroSelected = "B";
@@ -60,6 +79,7 @@ public class MenuHandler : MonoBehaviour
         SelectHeroBackground();
     }
 
+    // ABSTRACTION
     public void HeroButtonCClicked()
     {
         MainManager.HeroSelected = "C";
@@ -67,6 +87,7 @@ public class MenuHandler : MonoBehaviour
         SelectHeroBackground();
     }
 
+    // ABSTRACTION
     public void HeroButtonDClicked()
     {
         MainManager.HeroSelected = "D";

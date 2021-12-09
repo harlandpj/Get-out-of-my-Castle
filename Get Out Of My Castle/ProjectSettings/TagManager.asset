@@ -10,6 +10,20 @@ TagManager:
   - Button2
   - Button3
   - Button4
+  - CameraFocusPoint
+  - Troll
+  - Wolf
+  - CameraDefault
+  - SpawnManager
+  - MainManager
+  - HighScore
+  - Lives
+  - Health
+  - Score
+  - ScoreDisplayPanel
+  - Pickup1
+  - Pickup2
+  - Pickup3
   layers:
   - Default
   - TransparentFX
