@@ -24,6 +24,9 @@ TagManager:
   - Pickup1
   - Pickup2
   - Pickup3
+  - MainLight
+  - DynamicPatrolPoint
+  - LastPlayerName
   layers:
   - Default
   - TransparentFX
