@@ -12,6 +12,13 @@
 #
 #                             ----------------------------------------------------------------
 #
+#                 IMPORTANT NOTE: DEPENDING ON YOUR CPU SPEED, 
+#                 YOU WILL NEED TO REDUCE (or Increase) the "Player Speed" value (default is 5) found on the PLAYERA / PLAYERB / PLAYERC / PLAYERD characters
+#                 (the value is on the PlayerController script) which are in the "PLAYERS (they have main cameras)" folder in the Unity Heirarchy View.
+#                 Otherwise it can be like Usain Bolt running with rockets strapped to his feet!
+#
+#                             ----------------------------------------------------------------
+#
 # 	Important Note: The following 'Unity Asset Store' free assets are required, and will be imported
 # 	to enable the project to be re-built in Visual Studio!
 #
