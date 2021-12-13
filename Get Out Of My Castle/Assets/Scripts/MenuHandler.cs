@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System;
+using TMPro;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -12,16 +14,38 @@ using UnityEditor;
 public class MenuHandler : MonoBehaviour
 {
     AudioSource theAudio;
+
+    [Header("Selection Noise")]
+    [SerializeField]
     public AudioClip chime;
 
+    [Header("Backgrounds Displayed on Selection")]
     [SerializeField]
     private GameObject[] HeroBackgrounds;
+
+    [Header("Skybox Used")]
+    [SerializeField]
+    private Material defaultSkybox;
 
     private void Awake()
     {
         theAudio = GetComponent<AudioSource>();
+        
+        UnityEngine.RenderSettings.skybox = defaultSkybox;
+        SceneLoader.SetLightIntensity(1); // reset to day in case came from main game
+
         DisableHeroBackgrounds();
-        HighlightPreviousHero(); // check and highlight previously selected hero from earlier session
+
+        if (MainManager.HeroSelected != null)
+        {
+            HighlightPreviousHero(); // check and highlight previously selected hero from earlier session
+        }
+        
+    }
+
+    private void Start()
+    {
+        MainManager.Instance.LoadUserData();
     }
 
     private void HighlightPreviousHero()
@@ -97,6 +121,8 @@ public class MenuHandler : MonoBehaviour
 
     public void StartButtonClicked()
     {
+        MainManager.Instance.bGameOver = false;
+
         // load the main scene
         SceneManager.LoadScene(1); // defined in index in build settings window
     }

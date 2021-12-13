@@ -16,17 +16,25 @@
 # 	to enable the project to be re-built in Visual Studio!
 #
 #	My Thanks:
+#
 #       "What would a game developer do without the genius of artists, riggers, animators etc?"
 #
 #	Assets Used:
 #
-#	"Auryn Sky"
+#	"AllSkyFree 10 Sky / Skybox Set"			by RPG Whitelock
+#	"Apocalyptic Props: Flag01"				by MKaran
+#	"Blacksmith's Forge"					by 3DForge
 #	"Cartoon Heroes"
 #	"Castle 1 LITE"
+#	"Castle Props"
 #	"Casual RPG Monster - 26 Wolf"
 #	"Earthborn Troll"
-#	"Monster_Orc (Troll)
+#	"Free HDR Skyboxes Pack"				by BG Studio
+#	"HQ Lion Statue"					by Not Lonely
+#	"HD Rocks"						by Next Level 3D
+#	"Korea Native Trees"					by Yongho Kim
+#	"Monster_Orc (Troll)					by VK Gamedev
 #       "Simple Gems Ultimate Animated Customizable Pack"   	V 1.1 - by Aurynsky 
 #
 #
-#
+#	ENJOY!

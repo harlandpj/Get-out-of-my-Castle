@@ -11,11 +11,6 @@ public class RotateCamera : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //focusPoint = GameObject.Find("Camera Focus Point");
-
-        // setup focus point again
-        //GameObject parentObj = gameObject.GetComponentInChildren<Camera>().transform.parent.gameObject;
-        //GameObject parentObj = gameObject.GetComponentInChildren<Camera>().transform.parent.gameObject;
         focusPoint = transform.parent.gameObject;
 
         if (focusPoint == null)

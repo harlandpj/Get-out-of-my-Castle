@@ -46,24 +46,26 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // check input
+        CheckKeyPressed();
+    }
+
+    private void MoveRotatePlayer()
+    {
         // get player input
-        float horizontalInput = Input.GetAxis("Horizontal"); // -1 to 1 input from key press (left/right X Axis)
-        float verticalInput = Input.GetAxis("Vertical");   // -1 to 1 input from key press (down/up Z Axis)
-        
-        rotation = new Vector3(0, Input.GetAxisRaw("Horizontal") * rotationSpeed * Time.deltaTime * 0.23f, 0);
-        Vector3 move = new Vector3(0, 0, Input.GetAxisRaw("Vertical") * Time.deltaTime);
+        rotation = new Vector3(0, Input.GetAxisRaw("Horizontal") * rotationSpeed*Time.deltaTime * 0.23f, 0);
+        Vector3 moveDirection = Vector3.zero;
+        float speed = 1000;
+        float moveX = Input.GetAxisRaw("Horizontal");
+        float moveZ = Input.GetAxisRaw("Vertical");
 
-        move = transform.TransformDirection(move);
-        playerController.Move(move * playerSpeed);
+        moveDirection += transform.forward * moveZ * speed * Time.deltaTime;
 
-        Vector3 newPosition;
-
-        newPosition = new Vector3(transform.position.x, 0f, transform.position.z) ; // always on ground
+        playerController.Move(moveDirection * Time.deltaTime);
+        moveDirection = Vector3.zero;
 
         // rotate player
         transform.Rotate(rotation);
-
-        CheckKeyPressed();
     }
 
     private void CheckKeyPressed()
@@ -79,15 +81,38 @@ public class PlayerController : MonoBehaviour
             // stop attack
             StopAttackWithSword();
         }
-        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        else if (Input.GetKey(KeyCode.UpArrow))
         {
-            // run
+            // run (must always use GetKey here rather than Keydown otherwise buffers
+            // input if still holding move forward (UP arrow) & stuck inbetween 2 or more enemies!)
+            MoveRotatePlayer();
             StartRunning();
         }
         else if (Input.GetKeyUp(KeyCode.UpArrow))
         {
-            // stop running
             StopRunning();
+        }
+        else if (Input.GetKey(KeyCode.DownArrow))
+        {
+            MoveRotatePlayer();
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            // run (must always use GetKey here rather than Keydown otherwise buffers
+            // input if still holding move forward (UP arrow) & stuck inbetween 2 or more enemies!)
+            MoveRotatePlayer();
+        }
+        else if (Input.GetKey(KeyCode.RightArrow))
+        {
+            // run (must always use GetKey here rather than Keydown otherwise buffers
+            // input if still holding move forward (UP arrow) & stuck inbetween 2 or more enemies!)
+            MoveRotatePlayer();
+        }
+        else
+        {
+            // prevent it randomly running!
+            Vector3 moveDirection = Vector3.zero;
+            playerController.Move(moveDirection * Time.deltaTime);
         }
     }
 
@@ -101,15 +126,13 @@ public class PlayerController : MonoBehaviour
             playerAnim.SetBool("Attack", true);
             bAttackEnabled = false;
             CheckProximity();
+            StartCoroutine(StopSpaceSpamming());
         }
-
-        StartCoroutine(StopSpaceSpamming());
     }
 
     IEnumerator StopSpaceSpamming()
     {
-        yield return new WaitForSeconds(1f);
-        bAttackEnabled = true;
+        yield return new WaitForSeconds(swordHit.length);
     }
 
     private void CheckProximity()
@@ -117,12 +140,13 @@ public class PlayerController : MonoBehaviour
         // check if we are facing an enemy and within range to do damge
         
         RaycastHit pointHit;
+        RaycastHit pointHit2;
 
         // Shoot the ray to see if we hit something!
         Vector3 shootPoint = new Vector3(transform.position.x, 0.5f, transform.position.z); // shoot from 0.5f above ground
+        Vector3 shootPoint2 = new Vector3(transform.position.x, 1.5f, transform.position.z); // shoot from 1.5f above ground
 
-
-        if (Physics.Raycast(shootPoint, transform.forward, out pointHit, 1.75f))
+        if (Physics.Raycast(shootPoint, transform.forward, out pointHit, 2f /*1.75f*/) || Physics.Raycast(shootPoint, transform.forward, out pointHit2, 2f /*1.75f*/))
         {
             // ok... we hit something in range with the raycast
             Debug.Log("Laser hit :  " + pointHit.transform.name);
@@ -157,6 +181,7 @@ public class PlayerController : MonoBehaviour
     {
         audioSource.PlayOneShot(swordHit, 1f);
         yield return new WaitForSeconds(swordHit.length);
+        bAttackEnabled = true;
     }
 
     private void PlaySwordInAirSound()
@@ -168,6 +193,7 @@ public class PlayerController : MonoBehaviour
     {
         audioSource.PlayOneShot(swordInAir, 1f);
         yield return new WaitForSeconds(swordInAir.length);
+        bAttackEnabled = true;
     }
 
     private void StopAttackWithSword()
@@ -184,6 +210,10 @@ public class PlayerController : MonoBehaviour
     private void StopRunning()
     {
         playerAnim.SetFloat("Speed", 0f);
+
+        // prevent keyboard buffer from continuing movement
+        // which sometimes happens
+        playerController.Move(new Vector3(0,0,0));
     }
 
     private void OnCollisionEnter(Collision collision)

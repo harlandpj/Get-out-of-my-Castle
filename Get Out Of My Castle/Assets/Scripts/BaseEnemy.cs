@@ -14,14 +14,17 @@ public abstract class BaseEnemy : MonoBehaviour
 {    
     protected Animator m_Anim; // animator component
     protected NavMeshAgent navAgent; // navigation mesh
+
+    [SerializeField]
     protected Transform playerTransform; // transform of player
-    protected GameObject Player;
+
+    [SerializeField]
+    protected GameObject Player; // our player
 
     [SerializeField]
     protected AudioClip attackNoise;
 
     protected AudioSource audioSource;
-
     
     [SerializeField] 
     protected int m_Health; // current health
@@ -51,7 +54,7 @@ public abstract class BaseEnemy : MonoBehaviour
     }
 
     // ENCAPSULATION
-    protected int m_CurrentPatrolPoint = 0; // current patrol point number (importantly not a GameObject) of the enemy
+    protected int m_CurrentPatrolPoint = 0; // current patrol point number
     public int CurrentPatrolPoint 
     {
         get => m_CurrentPatrolPoint;
@@ -75,56 +78,83 @@ public abstract class BaseEnemy : MonoBehaviour
         }
     }
 
-    protected GameObject m_DestinationPoint; // destination is either Player or next Patrol Point
+    protected GameObject m_DestinationPoint; // destination is either towards Player or next Patrol Point
 
-    protected int m_Strength; // some enemies are stronger than others (will take longer to kill)
+    protected int m_Strength; // some enemies are stronger than others (and will take longer to kill)
     protected int m_DamageDealt; // damage dealt to player when attacking
     protected float m_Speed; // basic speed of enemy
     protected float m_EyesightDistance; // some enemies are btter at seeing the player (for raycast distance)
 
     // will use a simple set of bools for now - maybe change to a state machine later on
+    [Header ("Enemy States")]
+    [SerializeField]
     protected bool m_Attacking; // true if currently attacking player
+
+    [SerializeField]
     protected bool m_Patrolling = true; // always starts off patrolling between points (unless overridden)
+
+    [SerializeField]
     private bool m_Reversing = false; // sets to true at end of patrol, reset to false when start position reached again
     
     protected string m_EnemyName; // name of enemy for UI display (later on in dev)
 
-    // serialized to enable setting private field thru inspector
+    [Space]
     [SerializeField]
     protected GameObject[] m_PatrolPoints; // array of patrol points
+
+    protected BaseEnemy()
+    {
+        //m_PatrolPoints = new GameObject[3];
+    }
 
     private void Awake()
     {
         SetupEnemy();
     }
 
+    // set to first position
+    public virtual void SetToFirstPatrolPosition()
+    {
+        CurrentPatrolPoint = 0;
+        m_DestinationPoint = m_PatrolPoints[0];
+    }
+
     // POLYMORPHISM
     protected virtual void Start()
     {
-        ChangePlayerReference(); // as player needs resetting
+        // as player always needs resetting due to having 4 on screen with same name at start
+        ChangePlayerReference(); 
     }
 
     // change Player info on changing player
     public virtual void ChangePlayerReference()
     {
-        // this has been added to allow changing the player character
+        // has to be added here when game objects exist, to allow changing the player character
         // dynamically after selection from the main menu
         Player = GameObject.FindGameObjectWithTag("Player");
         playerTransform = Player.transform;
     }
 
+    //
+    public virtual void SetupDynamicPatrolPoint(int arrayNum, GameObject obj)
+    {
+        // set with dynamic object created in spawn manager
+        m_PatrolPoints[arrayNum] = obj;
+    }
 
     // POLYMORPHISM - override in derived & always call base
     public virtual void SetupEnemy()
     {
+        // always call base in derived class
+
         navAgent = GetComponent<NavMeshAgent>();
         m_Anim = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
-
-        // customiseable by derived classes
-        m_Health = 100;
-        m_Speed = 5f;
-        m_DamageDealt = 5;
+        
+        // customiseable in derived classes
+        Health = 100; // max health
+        m_Speed = 5f; // default speed
+        m_DamageDealt = 5;  // default attack damage
         m_EyesightDistance = 30f; // default vision distance 
         
         navAgent.speed = m_Speed; // set speed of character
@@ -132,44 +162,58 @@ public abstract class BaseEnemy : MonoBehaviour
         Player = GameObject.FindGameObjectWithTag("Player");
         playerTransform = Player.GetComponent<Transform>();
 
+        // removed dynamic points for now as probably have to override whole function
         // set initial destination to be first patrol point
+        if (m_PatrolPoints !=null)
+        {
+            CurrentPatrolPoint = 0;
+            m_DestinationPoint = m_PatrolPoints[0];
+        }
+        
+        // removed dynamic patrol points for now
+        // just set to go towards Player
+        if (m_PatrolPoints == null)
+        {
+            Debug.LogError("BaseEnemy.SetupEnemy Patrol Points Array is NULL!");
+        }
+
         if (m_PatrolPoints.Length == 0)
         {
+            //SetupDynamicPatrolPoints();
+            //m_DestinationPoint = m_PatrolPoints[0];
             m_DestinationPoint = Player;
         }
         else
         {
-            m_CurrentPatrolPoint = 0;
+            // set to start position of patrol points
+            CurrentPatrolPoint = 0;
             m_DestinationPoint = m_PatrolPoints[0];
         }
-        
     }
 
     // POLYMORPHISM, override in derived class to provide any specific attack functionality
     public virtual void AttackPlayer()
     {
-        m_Attacking = true;
-        m_Anim.SetBool("Attack", true);
-        MakeAttackNoise();
-    }
+        Debug.Log($"Now in AttackPlayer: m_Attacking = {m_Attacking}");
 
-    // POLYMORPHISM
-    public virtual void OnCollisionEnter(Collision collision)
-    {
-        // check if we collided with player
-        if (collision.gameObject.CompareTag("Player"))
+        if (!m_Attacking)
         {
-            AttackPlayer();
+            Debug.Log($"Now in AttackPlayer: {0} {m_Attacking}");
+            // ok to attack
+            Debug.Log("Now in AttackPlayer starting attack!");
+            m_Attacking = true;
+            m_Anim.SetBool("Attack", true);
+            m_Anim.SetFloat("Speed", 0f);
+            MakeAttackNoise(); // this also resets m_Attacking flag
+            StartCoroutine(DontAddDamage());
         }
     }
 
-    // POLYMORPHISM
-    protected virtual void OnCollisionExit(Collision collision)
+    IEnumerator DontAddDamage()
     {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            StopAttacking();
-        }
+        yield return new WaitForSeconds(2f);
+        m_Anim.SetBool("Attack", false);
+        AddDamage();
     }
 
     // POLYMORPHISM
@@ -177,12 +221,14 @@ public abstract class BaseEnemy : MonoBehaviour
     {
         m_Attacking = false;
         m_Anim.SetBool("Attack", false);
+        stopMovingForNow = false;
     }
 
     // POLYMORPHISM
     // adds damage to health of enemy
     public virtual void AddDamage()
     {
+        // die if health is zero, derived must call this base method
         AmIDead();
     }
 
@@ -210,11 +256,10 @@ public abstract class BaseEnemy : MonoBehaviour
                              Player.transform.position) <= m_EyesightDistance)
         {
             // player IS in range to be attacked!
-            //
 
             // *REMOVED FOR NOW*
-            // but only attack if visible (this bit removed for now for simplicity, but WILL use in future!)
-            // need to change to Cone shape ray(?) and cast in all 4 directions while moving
+            // Only attack if visible (this bit removed for now for simplicity, but WILL use in future!)
+            // need to change to raycast in 3 forward directions (at -45,0,45 degrees) while moving to see if Player found
 
             //RaycastHit pointHit = new RaycastHit();
 
@@ -260,47 +305,92 @@ public abstract class BaseEnemy : MonoBehaviour
             //m_Anim.SetFloat("Speed", 0); // stop and attack
             //m_Anim.SetBool("Attack", true);
 
+            if (!bMakeApproachNoise)
+            {
+                // make approach noise
+                MakeApproachNoise();
+            }
+
             m_Patrolling = false;
             return true;
         }
+        else
+        {
+            if (bMakeApproachNoise)
+            {
+                StopApproachNoise();
+            }
 
-        m_Patrolling = true;
-        m_Anim.SetFloat("Speed", 1.5f); // continue
-        m_Anim.SetBool("Attack", false);
-        return false;
+            m_Patrolling = true;
+            m_Anim.SetFloat("Speed", 1.5f); // continue
+            m_Anim.SetBool("Attack", false);
+            approachingThePlayer = false;
+            return false;
+        }
+    }
+
+    protected bool approachingThePlayer = false;
+    protected bool bMakeApproachNoise = false;
+    protected bool bPlayingApproach = false;
+    protected bool bPlayingAttack = false;
+    protected bool stopMovingForNow = false;
+
+    //POLYMORPHISM
+    protected virtual void MakeApproachNoise()
+    {
+    }
+    
+    //POLYMORPHISM
+    protected virtual void StopApproachNoise()
+    {
     }
 
     protected void MoveTowardsPlayer()
     {
-        // just chase the player
-        navAgent.destination = playerTransform.position;
-
+       
+        if (!stopMovingForNow)
+        {
+            // just chase the player
+            navAgent.destination = playerTransform.position;
+        }
+        
         // check if in attack range
         CloseEnoughToAttack();
     }
 
     private void CloseEnoughToAttack()
     {
-        if (Vector3.Distance(transform.position, Player.transform.position) <= 2f)
+        if (Vector3.Distance(transform.position, Player.transform.position) <= 3f)
         {
+            // in attack range, stop moving when attacking
+            stopMovingForNow = true;
+
+            // set navAgent destination to be my current transform to avoid repeated movement
+            // towards player during attack
+            navAgent.SetDestination(transform.position);
+            Debug.Log("Stopped, now Attacking Player!");
             AttackPlayer();
         }
         else
         {
+            // stop attack and restart movement
             StopAttacking();
+            navAgent.SetDestination(Player.transform.position);
+            stopMovingForNow = false;
+            m_Attacking = false;
         }
     }
 
-    // enemy dies
-    public virtual void Die() 
+    // enemy dies (horribly :o) )
+    protected virtual void Die() 
     {
         AmIDead();
     }
 
-    private void AmIDead()
+    protected void AmIDead()
     {
         // checks if have died
-        if (m_Health <= 0)
+        if (Health <= 0)
         {
             Death();
         }
@@ -308,24 +398,20 @@ public abstract class BaseEnemy : MonoBehaviour
 
     private void Death()
     {
-        // destroy with slight delay (would use a Pool Manager in a longer project to avoid GC)
+        // destroy with slight delay (use a Pool Manager in a longer project to avoid GC overheads)
         PlayDeathSound();
     }
 
-
-    private void PlayDeathSound()
+    protected virtual void PlayDeathSound()
     {
         // start a coroutine here to play a sound
         StartCoroutine("PlayDeath");
     }
 
-    IEnumerator PlayDeath()
+    // never called
+    protected virtual IEnumerator PlayDeath()
     {
-        // just for now do this!
-        Debug.Log("Enemy has Died");
-
-        yield return new WaitForSeconds(2);
-        Destroy(gameObject, 0.5f);
+        yield return new WaitForSeconds(1);
     }
 
     // enemy patrol function
@@ -343,42 +429,50 @@ public abstract class BaseEnemy : MonoBehaviour
             {
                 // just patrol from our current position to next patrol point
                 // reversing at end to go back to original position
+
+
+                if (m_DestinationPoint == null)
+                {
+                    Debug.Log("Destination doesnt exist!");
+                    m_DestinationPoint = Player;
+                }
+
                 if (Vector3.Distance(transform.position,
                                      m_DestinationPoint.transform.position) <= 1.5f)
                 {
                     // check if we were reversing and reached beginning
                     if (m_Reversing)
                     {
-                        if (m_CurrentPatrolPoint == 0)
+                        if (CurrentPatrolPoint == 0)
                         {
                             // we are at start of patrol
                             m_Reversing = false;
-                            m_CurrentPatrolPoint++;
+                            CurrentPatrolPoint++;
                         }
                         else
                         {
                             // go to next point
-                            m_CurrentPatrolPoint--;
+                            CurrentPatrolPoint--;
                         }
                     }
                     else
                     {
                         // not currently reversing, check have reached end of patrol
-                        if (m_CurrentPatrolPoint >= m_PatrolPoints.Length - 1)
+                        if (CurrentPatrolPoint >= m_PatrolPoints.Length - 1)
                         {
                             // go in reverse
                             m_Reversing = true;
-                            m_CurrentPatrolPoint--;
+                            CurrentPatrolPoint--;
                         }
                         else
                         {
                             // continue on to next patrol point
-                            m_CurrentPatrolPoint++;
+                            CurrentPatrolPoint++;
                         }
                     }
 
                     // set next destination
-                    m_DestinationPoint = m_PatrolPoints[m_CurrentPatrolPoint];
+                    m_DestinationPoint = m_PatrolPoints[CurrentPatrolPoint];
                     navAgent.destination = m_DestinationPoint.transform.position;
                 }
                 else
@@ -391,6 +485,7 @@ public abstract class BaseEnemy : MonoBehaviour
         else
         {
             // this enemy just goes towards the player
+            //SetupDynamicPatrolPoints();
             navAgent.destination = Player.transform.position;
         }
     }
@@ -405,7 +500,8 @@ public abstract class BaseEnemy : MonoBehaviour
     protected virtual IEnumerator PlayingAttack()
     {
         // must have something here as can't override audioClips!
-        //audioSource.PlayOneShot(attackNoise, 1f);
         yield return new WaitForSeconds(0.1f);
     }
+
+    protected virtual void StopPlayingAttack() { }
 }
