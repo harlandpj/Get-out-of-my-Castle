@@ -1,3 +1,17 @@
+############################################################################################################################################################
+#
+#   THIS PUBLIC REPO IS NOW BEING FURTHER DEVELOPED BY ME IN A PRIVATE REPOSITORY,                                                                          
+#   
+#   IT WILL NOT BE UPDATED FURTHER HERE, AND IS AVAILABLE "AS-IS".
+#
+#   YOU ARE WELCOME TO MAKE USE OF, OR TAKE IDEAS FROM THIS REPO, HOWEVER THE SOURCE CODE REMAINS (c) PHILIP J. HARLAND 2021
+#   AND YOU MUST MAKE ATTRIBUTION TO ME OF ANY USE OF CODE FROM HERE (AS PER BERNE CONVENTION ET AL)
+#
+#   ANY ASSETS IN THE EXTERNAL ASSETS FOLDER USED WHICH HAVE BEEN INCLUDED IN THIS REPO TO ALLOW IT TO BE BUILT, ARE COPYRIGHT OF THEIR RESPECTIVE OWNERS
+#   AND USED UNDER THEIR RESPECTIVE PUBLIC USE LICENCES.
+#
+############################################################################################################################################################
+'
 # 	Project initially created for "Create With Code 2 - Winter 2021" course run by Unity Live
 #
 #	"Defeat the (never ending) Monster Trolls, Orcs, and Wolves, that live in and around the castle, with your trusty Sword / Character of Choice
